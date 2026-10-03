@@ -258,7 +258,14 @@
 }
 
 .link-text {
-  word-break: break-all;
+  display: flex;
+  flex-direction: column;
+}
+
+.link-code {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
 }
 
 .link-copy:hover {

@@ -51,7 +51,10 @@ export function startHost(app, roomId, host) {
         setTimeout(() => delete copyLink.dataset.copied, 1600)
       } catch {}
     },
-  }, h('span', { class: 'link-text' }, shortUrl), h('span', { class: 'link-icon', html: icons.copy }))
+  },
+  // Path and room code on separate lines, so the code never breaks mid-way.
+  h('span', { class: 'link-text' }, h('span', {}, shortUrl.split('#')[0]), h('span', { class: 'link-code' }, `#${roomId}`)),
+  h('span', { class: 'link-icon', html: icons.copy }))
 
   const toolButton = (label, icon, onclick, key) =>
     h('button', { class: 'tool', type: 'button', 'aria-label': label, title: key ? `${label} (${key})` : label, onclick, html: icons[icon] })
@@ -142,7 +145,8 @@ export function startHost(app, roomId, host) {
 
   mesh.action('react').on((emoji, peerId) => {
     if (isAllowed(REACTIONS, emoji) && limits.react(peerId)) {
-      floatEmoji(layer, emoji, { size: 'clamp(2.5rem, 4vw, 4.5rem)' })
+      // Keep reactions off the QR code column so they never block a scan.
+      floatEmoji(layer, emoji, { size: 'clamp(2.5rem, 4vw, 4.5rem)', x: 0.32 + Math.random() * 0.68 })
     }
   })
   mesh.action('vote').on((d, peerId) => {
