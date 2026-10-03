@@ -77,6 +77,6 @@ async function route() {
 route().catch(err => {
   console.error(err)
   screen('The room could not start.', [
-    'A script failed to load, often because a network or an extension blocks the CDN this page uses. Try another network or disable blockers for this page.',
+    'A script failed to load. Reload the page; if it keeps failing, a network filter or a browser extension may be blocking it.',
   ], [h('button', { class: 'btn', type: 'button', onclick: () => location.reload() }, 'Try again')])
 })

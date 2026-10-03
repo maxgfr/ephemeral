@@ -1,7 +1,7 @@
 // Thin wrapper over Trystero: tracked presence, several listeners per event,
 // cached actions. Trystero 0.25 only allows one handler per event property,
 // so everything here fans out to Sets.
-import { joinRoom, selfId } from 'https://cdn.jsdelivr.net/npm/trystero@0.25.4/+esm'
+import { joinRoom, selfId } from '../vendor/trystero-0.25.4.js'
 
 export { selfId }
 
@@ -43,6 +43,9 @@ export function openRoom(roomId, options = {}) {
 
   return {
     selfId,
+    // Everyone sorts the same set of IDs, so when a room is over `cap` every
+    // browser agrees on exactly who is extra, without any coordination.
+    isExtra: cap => [selfId, ...peers].sort().indexOf(selfId) >= cap,
     peers, // connected peer IDs, excluding self
     onJoin: listen(joinFns),
     onLeave: listen(leaveFns),
@@ -62,6 +65,9 @@ export function openRoom(roomId, options = {}) {
       return wrapped
     },
 
-    leave: () => room.leave(),
+    leave() {
+      peers.clear()
+      return room.leave()
+    },
   }
 }

@@ -72,6 +72,22 @@ const validStroke = d =>
   d.length <= 32 &&
   d.every(p => Array.isArray(p) && p.length === 2 && p.every(v => Number.isFinite(v) && v >= 0 && v <= 1))
 
+// Keep the demo light even if this page gets busy: visitors spread over a few
+// panes (tabs of one browser share a pane, so "open a second tab" still
+// works), and a pane stops at PANE_CAP people.
+const PANE_SHARDS = 8
+const PANE_CAP = 12
+
+function paneShard() {
+  try {
+    let shard = localStorage.getItem('ephemeral-pane')
+    if (shard === null) localStorage.setItem('ephemeral-pane', (shard = String(Math.floor(Math.random() * PANE_SHARDS))))
+    return shard
+  } catch {
+    return '0'
+  }
+}
+
 async function joinPane() {
   let openRoom
   try {
@@ -80,11 +96,13 @@ async function joinPane() {
     countText.textContent = 'The live demo needs a network that allows WebRTC and WebSockets.'
     return
   }
-  const mesh = openRoom('landing-pane')
+  const mesh = openRoom(`landing-pane-${paneShard()}`)
+  let full = false
   const wipes = mesh.action('wipe')
   const canReceive = limiter(15, 20)
 
   const render = () => {
+    if (full) return
     const n = mesh.peers.size
     countEl.dataset.state = n ? 'live' : 'alone'
     countText.textContent = n
@@ -93,6 +111,14 @@ async function joinPane() {
   }
 
   mesh.onJoin(id => {
+    if (mesh.isExtra(PANE_CAP)) {
+      full = true
+      mesh.leave()
+      for (const peer of [...mesh.peers, id]) fog.removePrint(peer)
+      countEl.dataset.state = 'alone'
+      countText.textContent = `This glass is full (${PANE_CAP}+ people), so the live demo steps aside to keep every browser light.`
+      return
+    }
     fog.setPrint(id, spotFor(id, { x0: 0.6, x1: 0.92, y0: 0.22, y1: 0.78 }))
     render()
   })
@@ -107,7 +133,7 @@ async function joinPane() {
   })
 
   setInterval(() => {
-    if (!outbox.length || !mesh.peers.size) return (outbox.length = 0)
+    if (full || !outbox.length || !mesh.peers.size) return (outbox.length = 0)
     wipes.send(outbox.splice(0, 32))
   }, 90)
 

@@ -14,6 +14,7 @@
   tag.dataset.ephemeralReady = 'true'
 
   const POSITIONS = ['bottom-right', 'bottom-left', 'top-right', 'top-left']
+  const MAX_PEERS = 30
   const opt = tag.dataset
   const position = POSITIONS.includes(opt.position) ? opt.position : 'bottom-right'
   const showReaders = opt.readers !== 'false'
@@ -76,7 +77,7 @@
       -webkit-backdrop-filter: blur(12px) saturate(1.2); backdrop-filter: blur(12px) saturate(1.2);
     }
     .count { font-variant-numeric: tabular-nums; white-space: nowrap; }
-    .count[hidden] { display: none; }
+    .pill[hidden] { display: none; }
     .live {
       width: 7px; height: 7px; border-radius: 50%; background: var(--live);
     }
@@ -93,7 +94,6 @@
     .toggle[aria-expanded='true'] svg { transform: rotate(-12deg) scale(0.92); }
     .toggle:hover { color: var(--amber); }
     .tray { padding: 0 4px; gap: 0; }
-    .tray[hidden] { display: none; }
     .tray button {
       width: 34px; height: 34px; border-radius: 50%; background: transparent;
       font-size: 19px; line-height: 1; display: grid; place-items: center;
@@ -145,7 +145,9 @@
     const tray = $('.tray')
 
     // Presence: hidden when alone; "1 reader" only underlines the emptiness.
+    let capped = false
     const renderCount = () => {
+      if (capped) return
       const n = mesh.peers.size + 1
       count.hidden = n < 2
       $('.label').textContent = `${n} readers here`
@@ -217,7 +219,20 @@
       addEventListener('resize', () => dots.forEach(place), { passive: true })
     }
 
+    // Full mesh: every reader connects to every other. Past MAX_PEERS, the
+    // extra browsers step out to stay light and show "30+ readers here".
     mesh.onJoin(id => {
+      if (mesh.isExtra(MAX_PEERS)) {
+        capped = true
+        mesh.leave()
+        dots.forEach(d => d.remove())
+        dots.clear()
+        toggle.hidden = true
+        setOpen(false)
+        count.hidden = false
+        $('.label').textContent = `${MAX_PEERS}+ readers here`
+        return
+      }
       renderCount()
       if (showReaders) pos.send(ratio(), id) // newcomers see us right away
     })
