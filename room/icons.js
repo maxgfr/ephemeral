@@ -13,5 +13,6 @@ export const icons = {
   up: svg('<path d="M12 19V6M6 11.5L12 5.5l6 6"/>'),
   copy: svg('<rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V6.5A2.5 2.5 0 0 0 13.5 4h-7A2.5 2.5 0 0 0 4 6.5v7A2.5 2.5 0 0 0 6.5 16H8"/>'),
   arrow: svg('<path d="M5 12h14M13 6l6 6-6 6"/>'),
+  download: svg('<path d="M12 4v11M7 10.5l5 5 5-5M5 19.5h14"/>'),
   close: svg('<path d="M6 6l12 12M18 6L6 18"/>'),
 }

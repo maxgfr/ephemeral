@@ -15,19 +15,26 @@ const isCount = v => Number.isInteger(v) && v >= 0
 const clean = s => s.replace(/[\u0000-\u001f\u007f-\u009f\u200b\u200c\u200e\u200f\u2028-\u202e]/g, '').replace(/\s+/g, ' ').trim()
 const shortText = (v, max) => typeof v === 'string' && v.length <= max * 2 && clean(v).length > 0 && clean(v).length <= max
 
+// Optional stable voter id (kept in the phone's localStorage), so a reload
+// replaces a vote instead of adding one. Absent is fine; malformed is not.
+const withVoter = (d, out) => {
+  if (d.voter === undefined) return out
+  return isId(d.voter) ? { ...out, voter: d.voter } : null
+}
+
 export function validVote(d) {
   if (!isObj(d) || !isId(d.pollId) || !isCount(d.option) || d.option > 3) return null
-  return { pollId: d.pollId, option: d.option }
+  return withVoter(d, { pollId: d.pollId, option: d.option })
 }
 
 export function validAsk(d) {
   if (!isObj(d) || !isId(d.id) || !shortText(d.text, MAX_TEXT)) return null
-  return { id: d.id, text: clean(d.text) }
+  return withVoter(d, { id: d.id, text: clean(d.text) })
 }
 
 export function validUpvote(d) {
   if (!isObj(d) || !isId(d.questionId)) return null
-  return { questionId: d.questionId }
+  return withVoter(d, { questionId: d.questionId })
 }
 
 export function validSigned(d) {

@@ -20,9 +20,11 @@ const STATUS = {
   reconnecting: 'Reconnecting…',
 }
 
+// Kept on this phone only: what I voted, asked and upvoted, plus a random
+// voter id so a reload replaces my vote instead of adding one.
 function remember(key, fallback) {
   try {
-    return JSON.parse(sessionStorage.getItem(key)) ?? fallback
+    return { ...fallback, ...JSON.parse(localStorage.getItem(key)) }
   } catch {
     return fallback
   }
@@ -31,12 +33,13 @@ function remember(key, fallback) {
 export function startAudience(app, roomId) {
   const mesh = openRoom(roomName(roomId))
   const memKey = `ephemeral-me-${roomId}`
-  const me = remember(memKey, { votes: {}, asked: [], upvoted: [] })
+  const me = remember(memKey, { votes: {}, asked: [], upvoted: [], voter: randomId(8) })
   const save = () => {
     try {
-      sessionStorage.setItem(memKey, JSON.stringify(me))
+      localStorage.setItem(memKey, JSON.stringify(me))
     } catch {}
   }
+  save()
 
   let hostPeerId = null
   let verify = null
@@ -53,7 +56,10 @@ export function startAudience(app, roomId) {
   const statusDot = h('span', { class: 'status-dot', 'aria-hidden': 'true' })
   const statusText = h('span', { class: 'status-text' })
   const statusCount = h('span', { class: 'status-count num' })
-  const statusBar = h('header', { class: 'status', role: 'status', 'aria-live': 'polite' }, statusDot, statusText, statusCount)
+  // Shown when a connection doesn't come back on its own (iOS after a lock).
+  const rejoin = h('button', { class: 'rejoin', type: 'button', hidden: true, onclick: () => location.reload() }, 'Rejoin')
+  const statusBar = h('header', { class: 'status' },
+    statusDot, h('span', { class: 'status-msg', role: 'status', 'aria-live': 'polite' }, statusText, statusCount), rejoin)
 
   const tabPoll = h('button', { class: 'tab', type: 'button', role: 'tab', id: 'tab-poll', 'aria-controls': 'view-poll', onclick: () => setTab('poll') }, 'Poll')
   const qBadge = h('span', { class: 'tab-badge num' })
@@ -70,7 +76,7 @@ export function startAudience(app, roomId) {
       h('div', { class: 'tabs', role: 'tablist', 'aria-label': 'Room' }, tabPoll, tabQ),
       viewPoll,
       viewQ,
-      h('p', { class: 'privacy' }, 'People in this room can see your IP address, as with any peer-to-peer call. Nothing is stored.'),
+      h('p', { class: 'privacy' }, 'People in this room can see your IP address, as with any peer-to-peer call. Nothing is stored on a server.'),
       reactBar,
       layer,
     ),
@@ -79,10 +85,14 @@ export function startAudience(app, roomId) {
 
   /* ---------- Status ---------- */
 
+  let rejoinTimer = 0
   function setStatus(s) {
     status = s
     statusBar.dataset.state = s
     statusText.textContent = STATUS[s]
+    clearTimeout(rejoinTimer)
+    rejoin.hidden = s !== 'missing'
+    if (s === 'away' || s === 'reconnecting') rejoinTimer = setTimeout(() => (rejoin.hidden = false), 10_000)
     renderCount()
     renderPoll()
     renderQuestions()
@@ -157,7 +167,7 @@ export function startAudience(app, roomId) {
   const recv = Object.fromEntries(Object.entries(LIMITS).map(([k, [rate, burst]]) => [k, limiter(rate, burst)]))
   const toHost = (name, data) => {
     if (!hostPeerId || !send[name]('self')) return false
-    mesh.action(name).send(data, hostPeerId)
+    mesh.action(name).send({ ...data, voter: me.voter }, hostPeerId)
     return true
   }
 

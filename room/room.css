@@ -570,8 +570,26 @@
   font-weight: 500;
 }
 
-.status-text {
+.status-msg {
   flex: 1;
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s-2);
+}
+
+.rejoin {
+  min-height: 36px;
+  padding: 0 var(--s-4);
+  border: 0;
+  border-radius: var(--r-pill);
+  background: var(--amber);
+  color: var(--on-amber);
+  font: 600 var(--step--1) / 1 var(--font-ui);
+  cursor: pointer;
+}
+
+.rejoin:hover {
+  background: var(--amber-hover);
 }
 
 .status-count {

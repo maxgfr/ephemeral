@@ -68,3 +68,11 @@ test('validAsk keeps zero-width joiners inside emoji', () => {
   assert.equal(validAsk({ id: 'q1', text: `Hi ${dev}` }).text, `Hi ${dev}`)
   assert.equal(validAsk({ id: 'q1', text: `a${String.fromCharCode(0x202e)}b` }).text, 'ab')
 })
+
+test('vote, ask and upvote carry an optional voter id', () => {
+  assert.deepEqual(validVote({ pollId: 'p1', option: 0, voter: 'abc123' }), { pollId: 'p1', option: 0, voter: 'abc123' })
+  assert.deepEqual(validVote({ pollId: 'p1', option: 0 }), { pollId: 'p1', option: 0 })
+  assert.equal(validVote({ pollId: 'p1', option: 0, voter: '<x>' }), null)
+  assert.equal(validAsk({ id: 'q1', text: 'hi', voter: 5 }), null)
+  assert.deepEqual(validUpvote({ questionId: 'q1', voter: 'v1' }), { questionId: 'q1', voter: 'v1' })
+})

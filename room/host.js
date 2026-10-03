@@ -1,7 +1,7 @@
 // Presenter screen. Built for a projector: very high contrast, large type,
 // nothing important in small print. The presenter's browser aggregates every
 // vote and question, signs a snapshot and broadcasts it.
-import qrcode from 'https://cdn.jsdelivr.net/npm/qrcode-generator@2.0.4/+esm'
+import qrcode from '../vendor/qrcode-generator-2.0.4.js'
 import { openRoom } from '../core/mesh.js'
 import { floatEmoji } from '../core/float.js'
 import { createFog, spotFor } from '../core/fog.js'
@@ -10,6 +10,7 @@ import { isAllowed } from '../core/emoji.js'
 import { h, replaceKeepingFocus } from './dom.js'
 import { icons } from './icons.js'
 import { createStore } from './store.js'
+import { toCsv } from './export.js'
 import { validVote, validAsk, validUpvote, validPollDraft, MAX_TEXT, MAX_OPTION } from './validate.js'
 import { verifyHello } from './identity.js'
 import { roomName, REACTIONS, BROADCAST_MS, LIMITS, stateKey, joinUrl } from './protocol.js'
@@ -62,6 +63,7 @@ export function startHost(app, roomId, host) {
   const qrToggle = toolButton('Hide the QR code', 'qr', () => toggleQr(), 'Q')
   const themeToggle = toolButton('Switch light or dark', 'sun', () => toggleTheme(), 'T')
   const fsToggle = toolButton('Presentation mode', 'fullscreen', () => togglePresent(), 'F')
+  const exportButton = toolButton('Download the results as CSV', 'download', () => exportResults())
 
   const pollPanel = h('section', { class: 'panel panel-poll', 'aria-labelledby': 'poll-h' })
   const qPanel = h('section', { class: 'panel panel-questions', 'aria-labelledby': 'q-h' })
@@ -71,7 +73,7 @@ export function startHost(app, roomId, host) {
     h('header', { class: 'stage-bar' },
       h('a', { class: 'mark', href: '../', target: '_blank', rel: 'noopener' }, h('span', { class: 'mark-dot', 'aria-hidden': 'true' }), 'Ephemeral'),
       statusLine,
-      h('div', { class: 'tools' }, qrToggle, themeToggle, fsToggle,
+      h('div', { class: 'tools' }, exportButton, qrToggle, themeToggle, fsToggle,
         h('a', { class: 'tool tool-text', href: '#new', title: 'Start a new, empty room' }, 'New room')),
     ),
     h('aside', { class: 'join', 'aria-label': 'How to join' },
@@ -151,15 +153,18 @@ export function startHost(app, roomId, host) {
   })
   mesh.action('vote').on((d, peerId) => {
     const v = validVote(d)
-    if (v && limits.vote(peerId) && store.vote(peerId, v)) changed()
+    const who = v && store.identify(peerId, v.voter)
+    if (who && limits.vote(peerId) && store.vote(who, v)) changed()
   })
   mesh.action('ask').on((d, peerId) => {
     const q = validAsk(d)
-    if (q && limits.ask(peerId) && store.ask(peerId, q)) changed()
+    const who = q && store.identify(peerId, q.voter)
+    if (who && limits.ask(peerId) && store.ask(who, q)) changed()
   })
   mesh.action('upvote').on((d, peerId) => {
     const u = validUpvote(d)
-    if (u && limits.upvote(peerId) && store.upvote(peerId, u)) changed()
+    const who = u && store.identify(peerId, u.voter)
+    if (who && limits.upvote(peerId) && store.upvote(who, u)) changed()
   })
 
   /* ---------- Poll panel ---------- */
@@ -289,6 +294,22 @@ export function startHost(app, roomId, host) {
   function render() {
     renderPoll()
     renderQuestions()
+  }
+
+  // Every finished poll, the current one, and the visible questions, as CSV
+  // built here in the presenter's browser.
+  function exportResults() {
+    const current = store.poll ? [{ ...store.poll, tally: store.tally() }] : []
+    const csv = toCsv({
+      polls: [...store.history(), ...current],
+      questions: store.allQuestions().filter(q => !q.hidden),
+    })
+    const a = h('a', {
+      href: URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' })),
+      download: `ephemeral-${roomId}-${new Date().toISOString().slice(0, 10)}.csv`,
+    })
+    a.click()
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000)
   }
 
   function toggleQr(force) {

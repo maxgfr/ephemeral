@@ -1,26 +1,55 @@
 // Host-side aggregator. The presenter's browser is the single source of truth:
-// it counts one vote per peer, collects questions and upvotes, and turns all
-// of it into a snapshot that gets signed and broadcast. Pure and serializable.
+// it counts one vote per participant, collects questions and upvotes, and
+// turns all of it into a snapshot that gets signed and broadcast. Pure and
+// serializable.
+//
+// A participant is keyed by `identify(peerId, voter)`: the stable voter id a
+// phone keeps in localStorage when it sends one, otherwise the peerId. That
+// way a reload (new peerId) replaces a vote instead of adding one.
 
 import { MAX_QUESTIONS } from './validate.js'
 
 const MAX_PER_PEER = 10
+const MAX_HISTORY = 50
 
 export function createStore(saved = {}) {
   const ok = v => (Array.isArray(v) ? v : [])
   let seq = Number.isInteger(saved.seq) && saved.seq >= 0 ? saved.seq : 0
   let pollCount = Number.isInteger(saved.pollCount) ? saved.pollCount : 0
   let poll = saved.poll && Array.isArray(saved.poll.options) ? { ...saved.poll } : null
-  const votes = new Map(ok(saved.votes)) // peerId -> option, current poll only
+  const votes = new Map(ok(saved.votes)) // participant -> option, current poll only
+  const history = ok(saved.history).slice(-MAX_HISTORY) // finished polls
+  const peerVoter = new Map() // peerId -> voter id, fixed once seen
   const questions = new Map()
   for (const q of ok(saved.questions)) {
     if (q && typeof q.id === 'string') questions.set(q.id, { ...q, upvoters: new Set(ok(q.upvoters)) })
   }
 
   const asked = by => [...questions.values()].filter(q => q.by === by).length
+  const tallyOf = p => {
+    const t = new Array(p?.options.length ?? 0).fill(0)
+    for (const o of votes.values()) if (o < t.length) t[o] += 1
+    return t
+  }
+  const archive = () => {
+    if (!poll) return
+    history.push({ id: poll.id, question: poll.question, options: [...poll.options], tally: tallyOf(poll) })
+    if (history.length > MAX_HISTORY) history.shift()
+  }
 
   return {
+    // The key a participant's votes, questions and upvotes are filed under.
+    // Returns null when a peer tries to switch voter ids mid-session.
+    identify(peerId, voter) {
+      if (!voter) return peerId
+      const bound = peerVoter.get(peerId)
+      if (bound && bound !== voter) return null
+      peerVoter.set(peerId, voter)
+      return voter
+    },
+
     openPoll(question, options) {
+      archive()
       pollCount += 1
       poll = { id: `p${pollCount}`, question, options: [...options], open: true }
       votes.clear()
@@ -33,6 +62,7 @@ export function createStore(saved = {}) {
       if (poll) poll.open = true
     },
     clearPoll() {
+      archive()
       poll = null
       votes.clear()
     },
@@ -40,29 +70,31 @@ export function createStore(saved = {}) {
       return poll && { ...poll }
     },
 
-    vote(peerId, { pollId, option }) {
+    vote(who, { pollId, option }) {
       if (!poll?.open || pollId !== poll.id || option >= poll.options.length) return false
-      if (votes.get(peerId) === option) return false
-      votes.set(peerId, option)
+      if (votes.get(who) === option) return false
+      votes.set(who, option)
       return true
     },
 
     tally() {
-      const t = new Array(poll?.options.length ?? 0).fill(0)
-      for (const o of votes.values()) if (o < t.length) t[o] += 1
-      return t
+      return tallyOf(poll)
     },
 
-    ask(peerId, { id, text }) {
-      if (questions.has(id) || questions.size >= MAX_QUESTIONS || asked(peerId) >= MAX_PER_PEER) return false
-      questions.set(id, { id, text, by: peerId, at: Date.now(), upvoters: new Set(), answered: false, hidden: false })
+    history() {
+      return history.map(p => ({ ...p, options: [...p.options], tally: [...p.tally] }))
+    },
+
+    ask(who, { id, text }) {
+      if (questions.has(id) || questions.size >= MAX_QUESTIONS || asked(who) >= MAX_PER_PEER) return false
+      questions.set(id, { id, text, by: who, at: Date.now(), upvoters: new Set(), answered: false, hidden: false })
       return true
     },
 
-    upvote(peerId, { questionId }) {
+    upvote(who, { questionId }) {
       const q = questions.get(questionId)
-      if (!q || q.hidden || q.upvoters.has(peerId)) return false
-      q.upvoters.add(peerId)
+      if (!q || q.hidden || q.upvoters.has(who)) return false
+      q.upvoters.add(who)
       return true
     },
 
@@ -95,16 +127,13 @@ export function createStore(saved = {}) {
         .map(q => ({ id: q.id, text: q.text, votes: q.upvoters.size, answered: q.answered, hidden: q.hidden }))
     },
 
-    get peopleVoted() {
-      return votes.size
-    },
-
     toJSON() {
       return {
         seq,
         pollCount,
         poll,
         votes: [...votes],
+        history,
         questions: [...questions.values()].map(q => ({ ...q, upvoters: [...q.upvoters] })),
       }
     },
