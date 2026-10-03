@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ephemeral mesh test</title>
+<p id="status">Connecting…</p>
+<p>Self: <code id="self"></code></p>
+<script type="module">
+  import { openRoom } from './core/mesh.js'
+  const mesh = openRoom('ephemeral-test-v1', 'mesh-test-' + (location.hash.slice(1) || 'default'))
+  document.getElementById('self').textContent = mesh.selfId
+  const render = () => {
+    const n = mesh.peers.size
+    document.getElementById('status').textContent = n ? `Connected to ${n} peer${n > 1 ? 's' : ''}` : 'Waiting for peers…'
+  }
+  mesh.onJoin(render)
+  mesh.onLeave(render)
+  render()
+</script>
+</html>
