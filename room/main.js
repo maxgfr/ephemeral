@@ -11,12 +11,26 @@ const ROOM_ID = /^[0-9a-f]{20}$/
 addEventListener('hashchange', () => location.reload())
 
 function screen(title, body, actions) {
-  app.replaceChildren(
-    h('main', { class: 'gate' },
-      h('a', { class: 'mark', href: '../' }, h('span', { class: 'mark-dot', 'aria-hidden': 'true' }), 'Ephemeral'),
-      h('div', { class: 'gate-body' }, h('h1', {}, title), ...body.map(p => h('p', {}, p)), h('div', { class: 'gate-actions' }, actions)),
-    ),
+  const canvas = h('canvas', { class: 'fog', 'aria-hidden': 'true' })
+  const gate = h('main', { class: 'gate' },
+    canvas,
+    h('a', { class: 'mark', href: '../' }, h('span', { class: 'mark-dot', 'aria-hidden': 'true' }), 'Ephemeral'),
+    h('div', { class: 'gate-body' }, h('h1', {}, title), ...body.map(p => h('p', {}, p)), h('div', { class: 'gate-actions' }, actions)),
   )
+  app.replaceChildren(gate)
+  // The same glass as the landing page: wipe it with the pointer.
+  import('../core/fog.js').then(({ createFog }) => {
+    const fog = createFog(canvas)
+    let last = null
+    gate.addEventListener('pointermove', e => {
+      if (e.pointerType !== 'mouse' && !e.buttons) return
+      const r = gate.getBoundingClientRect()
+      const p = [(e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height]
+      fog.wipe(last ? [last, p] : [p])
+      last = p
+    })
+    gate.addEventListener('pointerleave', () => (last = null))
+  })
 }
 
 const createButton = label =>

@@ -7,7 +7,7 @@ export function h(tag, props = {}, ...children) {
     if (k === 'class') el.className = v
     else if (k === 'html') el.innerHTML = v // trusted, static markup only (icons)
     else if (k.startsWith('on')) el.addEventListener(k.slice(2), v)
-    else if (k === 'style') Object.assign(el.style, v)
+    else if (k === 'style') for (const [prop, val] of Object.entries(v)) el.style.setProperty(prop, val)
     else el.setAttribute(k, v === true ? '' : v)
   }
   for (const c of children.flat()) if (c != null && c !== false) el.append(c instanceof Node ? c : String(c))

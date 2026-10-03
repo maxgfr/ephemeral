@@ -33,7 +33,7 @@
   box-shadow: inset 0 0 0 1px var(--line-strong);
   color: var(--ink);
   font: inherit;
-  resize: vertical;
+  resize: none;
   transition: box-shadow var(--dur-fast) var(--ease-out);
 }
 
@@ -82,10 +82,18 @@
   display: grid;
   grid-template-rows: auto 1fr;
   padding: var(--s-4) var(--gutter) var(--s-8);
-  background:
-    radial-gradient(circle at 80% 30%, oklch(0.81 0.15 72 / 0.22) 0 2rem, transparent 2.1rem),
-    radial-gradient(circle at 68% 66%, oklch(0.72 0.09 230 / 0.18) 0 4rem, transparent 4.1rem),
-    linear-gradient(180deg, var(--glass-deep), var(--glass));
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: linear-gradient(180deg, var(--outside), var(--glass));
+}
+
+.gate .fog {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
 }
 
 .gate .mark {
@@ -136,7 +144,7 @@
   padding: 0 clamp(1.25rem, 3vw, 3.5rem) clamp(1.25rem, 3vw, 3rem);
   overflow: hidden;
   background:
-    linear-gradient(180deg, var(--glass-deep), var(--glass));
+    linear-gradient(180deg, var(--outside), var(--glass));
 }
 
 .stage .fog {
@@ -683,13 +691,25 @@
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: color-mix(in oklch, var(--ink) 16%, transparent);
+  background: color-mix(in oklch, var(--ink) 14%, transparent);
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 700ms var(--ease-out);
 }
 
-.options[data-results='true'] .option::before {
+.option::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: 4px;
+  background: var(--ink-soft);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 700ms var(--ease-out);
+}
+
+.options[data-results='true'] .option::before,
+.options[data-results='true'] .option::after {
   transform: scaleX(var(--share));
 }
 

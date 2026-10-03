@@ -33,7 +33,7 @@
       --amber: oklch(0.81 0.15 72);
       --on-amber: oklch(0.17 0.04 60);
       --live: oklch(0.84 0.12 170);
-      --dot: oklch(0.81 0.15 72 / 0.75);
+      --dot: oklch(0.92 0.02 240 / 0.85);
       --ease: cubic-bezier(0.16, 1, 0.3, 1);
       font: 500 13px/1.2 ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
       color: var(--ink);
@@ -46,7 +46,7 @@
         --ink-soft: oklch(0.42 0.04 256);
         --line: oklch(0.24 0.045 256 / 0.14);
         --live: oklch(0.55 0.11 170);
-        --dot: oklch(0.62 0.15 62 / 0.8);
+        --dot: oklch(0.35 0.04 256 / 0.6);
       }
     }
     .layer, .margin {
@@ -55,7 +55,7 @@
     .margin { left: auto; width: 14px; }
     .reader {
       position: absolute; right: 4px; top: 0; width: 6px; height: 6px; border-radius: 50%;
-      background: var(--dot); box-shadow: 0 0 0 2px oklch(1 0 0 / 0.5);
+      background: var(--dot); box-shadow: 0 0 0 2px oklch(0.2 0.03 252 / 0.25);
       transition: transform 900ms var(--ease), opacity 400ms var(--ease);
     }
     .dock {

@@ -67,6 +67,7 @@
   /* Night glass (default) */
   --glass: oklch(0.17 0.03 252);
   --glass-deep: oklch(0.12 0.026 254);
+  --outside: oklch(0.12 0.026 254); /* the scene behind the pane */
   --glass-raised: oklch(0.22 0.032 250);
   --frost: oklch(0.62 0.03 240 / 0.42);
   --frost-grain: oklch(0.9 0.02 240 / 0.07);
@@ -89,12 +90,13 @@
   :root:not([data-theme='dark']) {
     --glass: oklch(0.955 0.011 240);
     --glass-deep: oklch(0.915 0.016 242);
+    --outside: oklch(0.82 0.035 238);
     --glass-raised: oklch(0.99 0.004 240);
-    --frost: oklch(1 0 0 / 0.55);
+    --frost: oklch(0.99 0.004 240 / 0.72);
     --frost-grain: oklch(0.4 0.03 250 / 0.05);
     --ink: oklch(0.24 0.045 256);
     --ink-soft: oklch(0.38 0.045 256);
-    --ink-faint: oklch(0.44 0.04 256);
+    --ink-faint: oklch(0.42 0.04 256);
     --line: oklch(0.24 0.045 256 / 0.13);
     --line-strong: oklch(0.24 0.045 256 / 0.28);
     --amber: oklch(0.79 0.155 70);
@@ -111,12 +113,13 @@
 :root[data-theme='light'] {
   --glass: oklch(0.955 0.011 240);
   --glass-deep: oklch(0.915 0.016 242);
+  --outside: oklch(0.82 0.035 238);
   --glass-raised: oklch(0.99 0.004 240);
-  --frost: oklch(1 0 0 / 0.55);
+  --frost: oklch(0.99 0.004 240 / 0.72);
   --frost-grain: oklch(0.4 0.03 250 / 0.05);
   --ink: oklch(0.24 0.045 256);
   --ink-soft: oklch(0.38 0.045 256);
-  --ink-faint: oklch(0.44 0.04 256);
+  --ink-faint: oklch(0.42 0.04 256);
   --line: oklch(0.24 0.045 256 / 0.13);
   --line-strong: oklch(0.24 0.045 256 / 0.28);
   --amber: oklch(0.79 0.155 70);

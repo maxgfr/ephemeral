@@ -9,24 +9,18 @@
   grid-template-rows: auto 1fr auto;
   min-height: 100svh;
   overflow: hidden;
-  background:
-    radial-gradient(circle at 78% 30%, oklch(0.81 0.15 72 / 0.32) 0 1.6rem, transparent 1.7rem),
-    radial-gradient(circle at 86% 58%, oklch(0.81 0.15 72 / 0.18) 0 2.6rem, transparent 2.7rem),
-    radial-gradient(circle at 64% 70%, oklch(0.72 0.09 230 / 0.22) 0 3.4rem, transparent 3.5rem),
-    radial-gradient(circle at 92% 14%, oklch(0.8 0.06 220 / 0.2) 0 1.1rem, transparent 1.2rem),
-    radial-gradient(circle at 70% 18%, oklch(0.84 0.12 170 / 0.12) 0 2rem, transparent 2.1rem),
-    linear-gradient(180deg, var(--glass-deep), var(--glass));
+  background: linear-gradient(180deg, var(--outside), var(--glass) 92%);
 }
 
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme='dark']) .pane {
-    background:
-      radial-gradient(circle at 78% 30%, oklch(0.85 0.13 75 / 0.55) 0 1.6rem, transparent 1.7rem),
-      radial-gradient(circle at 86% 58%, oklch(0.85 0.13 75 / 0.35) 0 2.6rem, transparent 2.7rem),
-      radial-gradient(circle at 64% 70%, oklch(0.8 0.07 230 / 0.4) 0 3.4rem, transparent 3.5rem),
-      radial-gradient(circle at 92% 14%, oklch(0.82 0.06 220 / 0.4) 0 1.1rem, transparent 1.2rem),
-      linear-gradient(180deg, var(--glass-deep), var(--glass));
-  }
+/* The pane's lower edge: haze settling on the sill instead of a hard seam */
+.pane::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  z-index: -1;
+  height: 6rem;
+  background: linear-gradient(180deg, transparent, var(--glass));
+  pointer-events: none;
 }
 
 .fog {
@@ -256,8 +250,18 @@ kbd {
   color: var(--amber-ink);
 }
 
-.link-arrow::after {
-  content: ' →';
+.link-arrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+}
+
+.link-arrow .icon {
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.link-arrow:hover .icon {
+  transform: translateX(3px);
 }
 
 .mechanism {
@@ -669,7 +673,8 @@ kbd {
 
   .glass-count {
     position: static;
-    padding: 0 var(--gutter) var(--s-6);
+    /* room for the widget dock fixed to the bottom corner */
+    padding: 0 var(--gutter) calc(var(--s-6) + 3.5rem);
     text-align: left;
   }
 
@@ -682,7 +687,7 @@ kbd {
   }
 
   .mechanism text {
-    font-size: 26px;
+    font-size: 24px;
   }
 
   .mechanism .mech-label {
