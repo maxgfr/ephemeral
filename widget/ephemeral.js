@@ -79,9 +79,7 @@
     .count[hidden] { display: none; }
     .live {
       width: 7px; height: 7px; border-radius: 50%; background: var(--live);
-      animation: breathe 3.2s ease-in-out infinite;
     }
-    @keyframes breathe { 50% { opacity: 0.35; } }
     button {
       font: inherit; color: inherit; border: 0; margin: 0; cursor: pointer;
       -webkit-tap-highlight-color: transparent;
@@ -105,7 +103,6 @@
     .tray button:active { transform: scale(0.9); }
     button:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
     @media (prefers-reduced-motion: reduce) {
-      .live { animation: none; }
       .dock, .reader, .toggle svg, .tray button { transition: none; }
     }
     @media print { .root { display: none; } }

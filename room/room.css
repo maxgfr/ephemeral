@@ -136,7 +136,6 @@
   padding: 0 clamp(1.25rem, 3vw, 3.5rem) clamp(1.25rem, 3vw, 3rem);
   overflow: hidden;
   background:
-    radial-gradient(ellipse 80% 60% at 20% 110%, oklch(0.3 0.06 250 / 0.6), transparent 70%),
     linear-gradient(180deg, var(--glass-deep), var(--glass));
 }
 
@@ -573,9 +572,13 @@
   animation: breathe 1.6s ease-in-out infinite;
 }
 
+/* Pulses only while something is in progress; steady once connected. */
+.status:is([data-state='live'], [data-state='missing'], [data-state='away']) .status-dot {
+  animation: none;
+}
+
 .status[data-state='live'] .status-dot {
   background: var(--live);
-  animation-duration: 3.2s;
 }
 
 .status[data-state='missing'] {
