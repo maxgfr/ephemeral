@@ -1,0 +1,282 @@
+/* Ephemeral design tokens.
+   World: a cold window at night. Night glass, frost haze, one sodium-amber
+   accent that only ever marks something you can act on. Light mode is the
+   same pane in the morning: pale frost, ink-navy text, the same amber.
+   The widget cannot inherit this file through its Shadow DOM and inlines a
+   subset (see widget/ephemeral.js). */
+
+@font-face {
+  font-family: 'Bricolage Grotesque';
+  font-style: normal;
+  font-weight: 200 800;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url('./fonts/bricolage-grotesque-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215,
+    U+FEFF, U+FFFD;
+}
+
+:root {
+  color-scheme: dark light;
+
+  /* Type */
+  --font-display: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
+  --font-ui: 'Bricolage Grotesque', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-code: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, Consolas, monospace;
+
+  --step--1: 0.875rem;
+  --step-0: 1.0625rem;
+  --step-1: 1.25rem;
+  --step-2: 1.625rem;
+  --step-3: clamp(1.9rem, 1.4rem + 2vw, 2.6rem);
+  --step-4: clamp(2.5rem, 1.6rem + 4vw, 4.25rem);
+  --step-5: clamp(3rem, 1.5rem + 7vw, 6rem);
+  --leading-tight: 1.02;
+  --leading-snug: 1.2;
+  --leading-body: 1.55;
+  --tracking-display: -0.03em;
+
+  /* Space (4px base) */
+  --s-1: 0.25rem;
+  --s-2: 0.5rem;
+  --s-3: 0.75rem;
+  --s-4: 1rem;
+  --s-5: 1.5rem;
+  --s-6: 2rem;
+  --s-7: 3rem;
+  --s-8: 4.5rem;
+  --s-9: 7rem;
+  --gutter: clamp(1rem, 0.5rem + 3vw, 3rem);
+  --measure: 66ch;
+
+  /* Shape */
+  --r-sm: 6px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-pill: 999px;
+
+  /* Motion: exponential ease-out, breath-soft, never bouncy */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 140ms;
+  --dur: 260ms;
+  --dur-slow: 640ms;
+  --fog-return: 5200ms;
+
+  /* Night glass (default) */
+  --glass: oklch(0.17 0.03 252);
+  --glass-deep: oklch(0.12 0.026 254);
+  --glass-raised: oklch(0.22 0.032 250);
+  --frost: oklch(0.62 0.03 240 / 0.42);
+  --frost-grain: oklch(0.9 0.02 240 / 0.07);
+  --ink: oklch(0.97 0.008 240);
+  --ink-soft: oklch(0.84 0.022 240);
+  --ink-faint: oklch(0.7 0.028 242);
+  --line: oklch(0.97 0.01 240 / 0.14);
+  --line-strong: oklch(0.97 0.01 240 / 0.3);
+  --amber: oklch(0.81 0.15 72);
+  --amber-hover: oklch(0.87 0.14 78);
+  --amber-ink: oklch(0.81 0.15 72); /* amber used as text on the ground */
+  --on-amber: oklch(0.17 0.04 60);
+  --amber-glow: oklch(0.81 0.15 72 / 0.18);
+  --live: oklch(0.84 0.12 170);
+  --danger: oklch(0.74 0.15 25);
+  --shadow: 0 1px 2px oklch(0.05 0.02 254 / 0.4), 0 12px 32px -12px oklch(0.05 0.02 254 / 0.6);
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) {
+    --glass: oklch(0.955 0.011 240);
+    --glass-deep: oklch(0.915 0.016 242);
+    --glass-raised: oklch(0.99 0.004 240);
+    --frost: oklch(1 0 0 / 0.55);
+    --frost-grain: oklch(0.4 0.03 250 / 0.05);
+    --ink: oklch(0.24 0.045 256);
+    --ink-soft: oklch(0.38 0.045 256);
+    --ink-faint: oklch(0.48 0.04 256);
+    --line: oklch(0.24 0.045 256 / 0.13);
+    --line-strong: oklch(0.24 0.045 256 / 0.28);
+    --amber: oklch(0.79 0.155 70);
+    --amber-hover: oklch(0.74 0.16 64);
+    --amber-ink: oklch(0.5 0.13 55);
+    --on-amber: oklch(0.2 0.04 60);
+    --amber-glow: oklch(0.79 0.155 70 / 0.22);
+    --live: oklch(0.52 0.11 170);
+    --danger: oklch(0.52 0.17 25);
+    --shadow: 0 1px 2px oklch(0.3 0.04 254 / 0.12), 0 12px 32px -14px oklch(0.3 0.04 254 / 0.28);
+  }
+}
+
+:root[data-theme='light'] {
+  --glass: oklch(0.955 0.011 240);
+  --glass-deep: oklch(0.915 0.016 242);
+  --glass-raised: oklch(0.99 0.004 240);
+  --frost: oklch(1 0 0 / 0.55);
+  --frost-grain: oklch(0.4 0.03 250 / 0.05);
+  --ink: oklch(0.24 0.045 256);
+  --ink-soft: oklch(0.38 0.045 256);
+  --ink-faint: oklch(0.48 0.04 256);
+  --line: oklch(0.24 0.045 256 / 0.13);
+  --line-strong: oklch(0.24 0.045 256 / 0.28);
+  --amber: oklch(0.79 0.155 70);
+  --amber-hover: oklch(0.74 0.16 64);
+  --amber-ink: oklch(0.5 0.13 55);
+  --on-amber: oklch(0.2 0.04 60);
+  --amber-glow: oklch(0.79 0.155 70 / 0.22);
+  --live: oklch(0.52 0.11 170);
+  --danger: oklch(0.52 0.17 25);
+  --shadow: 0 1px 2px oklch(0.3 0.04 254 / 0.12), 0 12px 32px -14px oklch(0.3 0.04 254 / 0.28);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur: 0ms;
+    --dur-slow: 0ms;
+  }
+}
+
+/* Base: shared by the landing page and the room */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scrollbar-color: var(--line-strong) var(--glass-deep);
+}
+
+body {
+  margin: 0;
+  background: var(--glass);
+  color: var(--ink);
+  font: 400 var(--step-0) / var(--leading-body) var(--font-ui);
+  font-optical-sizing: auto;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  caret-color: var(--amber);
+}
+
+::selection {
+  background: var(--amber);
+  color: var(--on-amber);
+}
+
+:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 3px;
+  border-radius: var(--r-sm);
+}
+
+a {
+  color: inherit;
+  text-decoration-color: var(--amber);
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.22em;
+}
+
+a:hover {
+  color: var(--amber-ink);
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  letter-spacing: var(--tracking-display);
+  line-height: var(--leading-snug);
+  text-wrap: balance;
+  margin: 0;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+code,
+kbd,
+pre {
+  font-family: var(--font-code);
+  font-size: 0.92em;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Buttons: amber means "you can act on this", nothing else is amber */
+.btn {
+  --_bg: var(--amber);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  min-height: 48px;
+  padding: 0 var(--s-5);
+  border: 0;
+  border-radius: var(--r-pill);
+  background: var(--_bg);
+  color: var(--on-amber);
+  font: 600 var(--step-0) / 1 var(--font-ui);
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 0 0 0 var(--amber-glow);
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.btn:hover {
+  --_bg: var(--amber-hover);
+  color: var(--on-amber);
+  box-shadow: 0 0 0 8px var(--amber-glow);
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+  box-shadow: none;
+}
+
+.btn-quiet {
+  --_bg: transparent;
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+
+.btn-quiet:hover {
+  --_bg: var(--glass-raised);
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--ink-faint);
+}
+
+.icon {
+  width: 1.15em;
+  height: 1.15em;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}

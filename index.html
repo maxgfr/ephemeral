@@ -2,11 +2,170 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Ephemeral</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ephemeral · presence that leaves no trace</title>
+<meta name="description" content="Live reactions, polls and Q&amp;A for talks, and a one-line widget that shows who is reading your page. Peer to peer over WebRTC. No account, no server, nothing kept.">
+<meta name="theme-color" content="#0b1420" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#edf1f6" media="(prefers-color-scheme: light)">
+<meta property="og:title" content="Ephemeral">
+<meta property="og:description" content="Presence that leaves no trace. Live rooms for talks and a one-line widget for static sites, peer to peer.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230e1826'/%3E%3Ccircle cx='16' cy='16' r='8' fill='%23f2ad3d' opacity='.9'/%3E%3C/svg%3E">
+<link rel="preload" href="core/fonts/bricolage-grotesque-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="core/tokens.css">
+<link rel="stylesheet" href="site/landing.css">
 </head>
 <body>
-<h1>Ephemeral</h1>
-<p>Serverless real-time presence over WebRTC. Coming soon.</p>
+
+<header class="pane" id="top">
+  <canvas class="fog" aria-hidden="true"></canvas>
+  <nav class="bar" aria-label="Primary">
+    <a class="mark" href="./" aria-label="Ephemeral, home"><span class="mark-dot" aria-hidden="true"></span>Ephemeral</a>
+    <div class="bar-links">
+      <a href="#how">How it works</a>
+      <a href="#embed">Embed</a>
+      <a href="#limits">Limits</a>
+      <a href="https://github.com/maxgfr/ephemeral" class="gh">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"/></svg>
+        <span>Source</span>
+      </a>
+    </div>
+  </nav>
+
+  <div class="hero">
+    <h1 class="hero-title">Presence that leaves no&nbsp;trace.</h1>
+    <p class="hero-lede">Live reactions, polls and Q&amp;A for your talk, and a one-line widget that shows who is reading your page. Browsers talk to each other directly. No account, no server, nothing kept.</p>
+    <div class="hero-actions">
+      <a class="btn" href="room/#new">
+        Create a room
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+      <a class="btn btn-quiet" href="#embed">Embed on your site</a>
+    </div>
+  </div>
+
+  <p class="glass-count" role="status" aria-live="polite">
+    <span class="live-dot" aria-hidden="true"></span>
+    <span class="glass-count-text">Connecting to this pane…</span>
+  </p>
+  <p class="hint" aria-hidden="true">Wipe the glass</p>
+</header>
+
+<main>
+  <section class="how" id="how" aria-labelledby="how-title">
+    <h2 id="how-title" class="section-title">Two tools on one small core.</h2>
+
+    <div class="product product-room">
+      <h3>The room</h3>
+      <p>For talks, classes and meetings. Your screen shows a QR code; the audience joins on their phones and sends reactions, votes in your polls and asks questions others can upvote. You stay the only one who can open a poll or publish a result.</p>
+      <ul class="facts">
+        <li>One click to create, nothing to install</li>
+        <li>Polls with two to four options, live bars</li>
+        <li>Q&amp;A sorted by votes, mark answered, hide</li>
+        <li>Press <kbd>F</kbd> for a clean projector view</li>
+      </ul>
+      <a class="link-arrow" href="room/#new">Create a room</a>
+    </div>
+
+    <div class="product product-widget">
+      <h3>The widget</h3>
+      <p>For blogs, docs and any static page. Paste one tag and readers see how many people are on the page with them, can send a reaction everyone sees float by, and spot where the others are in the text. Alone on the page, it stays quiet.</p>
+      <ul class="facts">
+        <li>One <code>&lt;script&gt;</code> tag, no build, no key</li>
+        <li>Shadow DOM: your CSS and ours never meet</li>
+        <li>One room per page, the URL is hashed</li>
+        <li>Fails silently if a network blocks it</li>
+      </ul>
+      <a class="link-arrow" href="#embed">Get the snippet</a>
+    </div>
+
+    <figure class="mechanism">
+      <svg viewBox="0 0 720 260" role="img" aria-labelledby="mech-title mech-desc">
+        <title id="mech-title">How peers connect</title>
+        <desc id="mech-desc">Two browsers find each other through public Nostr relays, then exchange everything directly over WebRTC.</desc>
+        <g class="mech-relays">
+          <circle cx="300" cy="44" r="7"/><circle cx="360" cy="30" r="7"/><circle cx="420" cy="44" r="7"/>
+          <text x="360" y="84" text-anchor="middle">public Nostr relays</text>
+        </g>
+        <path class="mech-intro" d="M120 170 C 170 60, 260 44, 300 44"/>
+        <path class="mech-intro" d="M600 170 C 550 60, 460 44, 420 44"/>
+        <path class="mech-direct" d="M150 196 H 570"/>
+        <g class="mech-peer"><rect x="40" y="160" width="110" height="72" rx="12"/><text x="95" y="202" text-anchor="middle">your browser</text></g>
+        <g class="mech-peer"><rect x="570" y="160" width="110" height="72" rx="12"/><text x="625" y="202" text-anchor="middle">theirs</text></g>
+        <text class="mech-label" x="360" y="186" text-anchor="middle">reactions, votes, questions: direct, WebRTC</text>
+        <text class="mech-label mech-label-soft" x="200" y="112" text-anchor="middle">introductions only</text>
+      </svg>
+      <figcaption>
+        Public Nostr relays only introduce browsers to each other, through <a href="https://github.com/dmotz/trystero">Trystero</a>. After that, every reaction, vote and question goes browser to browser. In a room, the presenter's browser holds a key pair: the room address is a hash of the public key and every poll and result is signed, so nobody else can speak for the room.
+      </figcaption>
+    </figure>
+  </section>
+
+  <section class="embed" id="embed" aria-labelledby="embed-title">
+    <div class="embed-intro">
+      <h2 id="embed-title" class="section-title">Put it on your page.</h2>
+      <p>Choose the reactions and the corner, then paste the tag anywhere in your HTML. It works with or without <code>type="module"</code>, and it is running on this page right now: open a second tab and watch the corner.</p>
+    </div>
+
+    <form class="builder" id="builder" autocomplete="off">
+      <fieldset class="field">
+        <legend>Reactions <span class="field-note num" id="emoji-count"></span></legend>
+        <div class="chips" id="chips"></div>
+        <label class="custom">
+          <span class="visually-hidden">Add your own emoji</span>
+          <input id="custom-emoji" type="text" inputmode="text" placeholder="Add your own, e.g. 🦄" maxlength="16">
+        </label>
+      </fieldset>
+
+      <fieldset class="field">
+        <legend>Corner</legend>
+        <div class="corners" id="corners">
+          <label><input type="radio" name="position" value="top-left"><span>Top left</span></label>
+          <label><input type="radio" name="position" value="top-right"><span>Top right</span></label>
+          <label><input type="radio" name="position" value="bottom-left"><span>Bottom left</span></label>
+          <label><input type="radio" name="position" value="bottom-right" checked><span>Bottom right</span></label>
+          <span class="corners-caption" aria-hidden="true">your page</span>
+        </div>
+      </fieldset>
+
+      <fieldset class="field">
+        <legend>Reading positions</legend>
+        <label class="switch">
+          <input type="checkbox" id="readers" checked>
+          <span class="switch-track" aria-hidden="true"></span>
+          <span>Show where other readers are, as dots in the right margin</span>
+        </label>
+      </fieldset>
+
+      <div class="output">
+        <pre class="snippet" id="snippet" tabindex="0" aria-label="Embed code"></pre>
+        <button class="btn" type="button" id="copy">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V6.5A2.5 2.5 0 0 0 13.5 4h-7A2.5 2.5 0 0 0 4 6.5v7A2.5 2.5 0 0 0 6.5 16H8"/></svg>
+          <span>Copy the tag</span>
+        </button>
+      </div>
+    </form>
+  </section>
+
+  <section class="limits" id="limits" aria-labelledby="limits-title">
+    <h2 id="limits-title" class="section-title">What it can't do.</h2>
+    <p class="limits-lede">No server means no server's guarantees. These are trade-offs of the approach, stated up front.</p>
+    <dl class="limit-list">
+      <div><dt>Peers see each other's IP address</dt><dd>WebRTC connects browsers directly, so everyone in a room or on a page can see the others' IP addresses. On a professional site, tell your readers; this counts as personal data under GDPR.</dd></div>
+      <div><dt>A few dozen people, not five hundred</dt><dd>Every peer connects to every other. Thirty people means 435 connections, and phones start to struggle past a few dozen. Good for a meetup or a class, wrong for a keynote.</dd></div>
+      <div><dt>Some connections fail</dt><dd>Without a TURN relay, strict NATs and some corporate, school or mobile networks block direct connections. Expect roughly one person in ten to stay on "Connecting".</dd></div>
+      <div><dt>Nothing is kept</dt><dd>When everyone leaves, it is gone. On a quiet site the widget is mostly alone and stays hidden. The presenter's browser saves the room state locally so a reload doesn't wipe it.</dd></div>
+      <div><dt>Votes can be gamed</dt><dd>Reactions and votes are anonymous. Someone determined can reconnect and vote again. Rate limits slow abuse down; they don't stop it. Don't use it for a vote that matters.</dd></div>
+      <div><dt>Relays belong to others</dt><dd>Signaling uses public Nostr relays run by third parties. Several are tried at once, but they can be slow or go away.</dd></div>
+    </dl>
+  </section>
+</main>
+
+<footer class="foot">
+  <p>No cookies, no analytics, no backend. MIT licensed, <a href="https://github.com/maxgfr/ephemeral">source on GitHub</a>.</p>
+  <a class="foot-top" href="#top">Back to the glass</a>
+</footer>
+
+<script type="module" src="site/landing.js"></script>
+<script src="widget/ephemeral.js" defer data-reactions="👏🔥❤️😂🤔🎉" data-position="bottom-right" data-readers="true"></script>
 </body>
 </html>
