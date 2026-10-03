@@ -186,9 +186,49 @@
       }
     })
 
-    mesh.onJoin(renderCount)
+    // Reading positions: each reader shares scrollY / (scrollHeight - innerHeight),
+    // at most once a second and only when it moved by more than 2%.
+    const dots = new Map()
+    const pos = mesh.action('pos')
+    const canReceivePos = limiter(1, 2)
+    const margin = $('.margin')
+    let sent = -1
+    const ratio = () => {
+      const max = document.documentElement.scrollHeight - innerHeight
+      return max > 0 ? Math.round(Math.min(1, Math.max(0, scrollY / max)) * 1000) / 1000 : 0
+    }
+    const place = dot => (dot.style.transform = `translateY(${Number(dot.dataset.r) * (innerHeight - 12) + 3}px)`)
+    if (showReaders) {
+      setInterval(() => {
+        const r = ratio()
+        if (document.hidden || !mesh.peers.size || Math.abs(r - sent) <= 0.02) return
+        sent = r
+        pos.send(r)
+      }, 1000)
+      pos.on((r, peerId) => {
+        if (typeof r !== 'number' || !(r >= 0 && r <= 1) || !canReceivePos(peerId)) return
+        let dot = dots.get(peerId)
+        if (!dot) {
+          dot = document.createElement('span')
+          dot.className = 'reader'
+          margin.append(dot)
+          dots.set(peerId, dot)
+        }
+        dot.dataset.r = r
+        place(dot)
+      })
+      addEventListener('resize', () => dots.forEach(place), { passive: true })
+    }
+
+    mesh.onJoin(id => {
+      renderCount()
+      if (showReaders) pos.send(ratio(), id) // newcomers see us right away
+    })
     mesh.onLeave(id => {
       canReceive.forget(id)
+      canReceivePos.forget(id)
+      dots.get(id)?.remove()
+      dots.delete(id)
       renderCount()
     })
     renderCount()
@@ -196,7 +236,6 @@
     if (!document.body) await new Promise(r => addEventListener('DOMContentLoaded', r, { once: true }))
     document.body.append(host)
     requestAnimationFrame(() => requestAnimationFrame(() => $('.dock').classList.add('ready')))
-    return { mesh, shadow, showReaders }
   }
 
   // Corporate network, blocker, old browser: show nothing rather than an error.
