@@ -138,3 +138,12 @@ export function createFog(canvas, { returnMs = 5200, brush = 64 } = {}) {
     },
   }
 }
+
+// A stable spot for a peer inside a region of the pane, from its ID.
+export function spotFor(id, { x0 = 0.05, x1 = 0.95, y0 = 0.1, y1 = 0.9, r = 0.045 } = {}) {
+  let h = 2166136261
+  for (const c of id) h = Math.imul(h ^ c.charCodeAt(0), 16777619)
+  const a = (h >>> 0) / 2 ** 32
+  const b = ((h >>> 11) % 1000) / 1000
+  return { x: x0 + a * (x1 - x0), y: y0 + b * (y1 - y0), r: r + (h & 7) * 0.003 }
+}

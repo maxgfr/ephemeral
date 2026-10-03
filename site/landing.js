@@ -1,4 +1,4 @@
-import { createFog } from '../core/fog.js'
+import { createFog, spotFor } from '../core/fog.js'
 import { limiter } from '../core/ratelimit.js'
 import { splitEmojis, DEFAULT_REACTIONS } from '../core/emoji.js'
 
@@ -66,15 +66,6 @@ document.fonts.ready.then(() => setTimeout(introStroke, 350))
 const countEl = document.querySelector('.glass-count')
 const countText = document.querySelector('.glass-count-text')
 
-// A stable spot on the right half of the pane for each peer.
-function printFor(id) {
-  let h = 2166136261
-  for (const c of id) h = Math.imul(h ^ c.charCodeAt(0), 16777619)
-  const a = (h >>> 0) / 2 ** 32
-  const b = ((h >>> 11) % 1000) / 1000
-  return { x: 0.6 + a * 0.32, y: 0.22 + b * 0.56, r: 0.045 + (h & 7) * 0.003 }
-}
-
 const validStroke = d =>
   Array.isArray(d) &&
   d.length > 0 &&
@@ -89,7 +80,7 @@ async function joinPane() {
     countText.textContent = 'The live demo needs a network that allows WebRTC and WebSockets.'
     return
   }
-  const mesh = openRoom('ephemeral-landing-v1', 'pane')
+  const mesh = openRoom('landing-pane')
   const wipes = mesh.action('wipe')
   const canReceive = limiter(15, 20)
 
@@ -102,7 +93,7 @@ async function joinPane() {
   }
 
   mesh.onJoin(id => {
-    fog.setPrint(id, printFor(id))
+    fog.setPrint(id, spotFor(id, { x0: 0.6, x1: 0.92, y0: 0.22, y1: 0.78 }))
     render()
   })
   mesh.onLeave(id => {

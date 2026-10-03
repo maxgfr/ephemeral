@@ -5,8 +5,15 @@ import { joinRoom, selfId } from 'https://cdn.jsdelivr.net/npm/trystero@0.25.4/+
 
 export { selfId }
 
+// One appId for everything, rooms namespaced by prefix ("room-…", "widget-…").
+// Trystero 0.25 picks relays from the appId and shares one relay pool per
+// page, so a page joining two different appIds only meets peers of the first.
+// The -v1 keeps future protocol versions apart.
+export const APP_ID = 'ephemeral-v1'
+
 // `options` passes straight to Trystero (relayConfig, turnConfig, password...).
-export function openRoom(appId, roomId, options = {}) {
+export function openRoom(roomId, options = {}) {
+  const appId = APP_ID
   const peers = new Set()
   const joinFns = new Set()
   const leaveFns = new Set()

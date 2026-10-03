@@ -13,7 +13,6 @@
   if (!tag || tag.dataset.ephemeralReady) return
   tag.dataset.ephemeralReady = 'true'
 
-  const APP_ID = 'ephemeral-widget-v1'
   const POSITIONS = ['bottom-right', 'bottom-left', 'top-right', 'top-left']
   const opt = tag.dataset
   const position = POSITIONS.includes(opt.position) ? opt.position : 'bottom-right'
@@ -126,7 +125,7 @@
     // One room per page: query string and hash are ignored so ?utm_… doesn't
     // split readers, and the path is hashed so relays never see the URL.
     const roomId = (await sha256Hex(location.host + location.pathname)).slice(0, 20)
-    const mesh = openRoom(APP_ID, roomId)
+    const mesh = openRoom(`widget-${roomId}`)
 
     const host = document.createElement('ephemeral-widget')
     const shadow = host.attachShadow({ mode: 'open' })

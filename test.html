@@ -16,7 +16,7 @@
   import { limiter } from './core/ratelimit.js'
   import { DEFAULT_REACTIONS, isAllowed } from './core/emoji.js'
 
-  const mesh = openRoom('ephemeral-test-v1', 'mesh-test-' + (location.hash.slice(1) || 'default'))
+  const mesh = openRoom('mesh-test-' + (location.hash.slice(1) || 'default'))
   const layer = document.getElementById('layer')
   const react = mesh.action('react')
   const sendOk = limiter(4, 8)
