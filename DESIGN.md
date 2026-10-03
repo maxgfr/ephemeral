@@ -288,7 +288,8 @@ Tactile, rounded and warm; the amber button is the only filled colour on any scr
 - **Primary:** amber fill, lamp-shadow text, 600 weight at body size, -0.01em tracking. One per decision: "Create a room", "Open the poll", "Close voting", "Copy the tag".
 - **Hover / Focus:** fill lifts to lit sodium and an 8px amber halo breathes out (260ms ease-out); press scales to 0.97; focus is a 2px amber outline offset 3px. Disabled drops to 45% opacity with no halo. A successful copy turns the fill live teal briefly.
 - **Quiet:** transparent with a strong hairline ring and ink text; hover fills with raised glass and the ring darkens to faint ink. Used for the secondary choice beside a primary ("Embed on your site", "Reopen voting", "New poll").
-- **Tool (presenter bar):** 44px pill, transparent, soft-ink label or SVG icon; hover and pressed states fill raised glass with ink text. Keyboard shortcuts (Q, T, F) mirror them.
+- **Tool (presenter bar):** 44px pill, transparent, soft-ink label or SVG icon; hover and pressed states fill raised glass with ink text. Keyboard shortcuts (Q, T, F) mirror them. The first tool downloads the session as CSV.
+- **Rejoin (phone status bar):** a compact 36px amber pill at the end of the status bar, shown only when the presenter has been unreachable for 10 seconds or is missing. It reloads the page.
 - **Chip button (question actions):** 36px pill, hairline ring, faint-ink text with an icon; hover brightens to ink.
 
 ### Chips
@@ -311,13 +312,13 @@ There are no cards. Content sits directly on the glass, grouped by hairlines and
 ### Navigation
 - **Landing bar:** the wordmark (700, 1.25rem, -0.02em) led by the amber brand dot with its halo, then label-size 500 soft-ink links that brighten to ink on hover, with a GitHub SVG icon. Below 640px only the source link remains.
 - **Phone tabs:** a two-up segmented control: pill track on deep glass with a hairline ring, 44px pill tabs in soft ink; the selected tab rises onto raised glass with the lift shadow. An ink badge with tabular digits counts new questions.
-- **Phone status bar:** sticky, blurred night glass, a breathing status dot (faint ink) while joining or reconnecting that turns steady live teal once connected, or ember when the room is missing.
+- **Phone status bar:** sticky, blurred night glass, a breathing status dot (faint ink) while joining or reconnecting that turns steady live teal once connected, or ember when the room is missing. The Rejoin pill appears at its end when the connection doesn't come back on its own.
 
 ### Frost Pane (signature)
 The fog canvas: a 192px tile of translucent frost with baked grain, rendered at half resolution behind content. A pointer or finger wipes soft radial discs along its path; wipes decay exponentially back to haze (5.2s on the landing and gate, 2.4s on the presenter stage). Peers appear as soft clear prints at a stable, ID-derived spot (on the landing, inside the right-hand region beside the live count), and a leaving peer's print hands over to the decay instead of vanishing. On the landing, a single authored stroke wipes across the headline once fonts load (skipped under reduced motion), and other visitors' wipe strokes arrive live. The canvas re-reads its colours when the theme flips. Under reduced motion it is static and the page stays fully legible.
 
 ### Live Head Count (signature)
-The presenter's join column ends in the numeral role (tabular, 700, up to 9rem) above a soft-ink "people here" label that agrees in number. On the landing, the pane's own count sits bottom-right on the glass: a small dot (faint ink alone, live teal with company) and one honest sentence.
+The presenter's join column ends in the numeral role (tabular, 700, up to 9rem) above a soft-ink "people here" label that agrees in number. On the landing, the pane's own count sits bottom-right on the glass: a small dot (faint ink alone, live teal with company) and one honest sentence. A full pane (12 people) says so in the same sentence instead of pretending.
 
 ### Poll Results
 Presenter bars are pill tracks of hairline tone that fill from the left over 700ms ease-out; the leading option fills ink, the others faint ink; each row pairs the label with a tabular "count · percent". On the phone, each option is a 60px raised-glass button; after voting, a translucent ink wash and a 4px soft-ink underline grow to the option's share, and the voted option keeps its 2px amber ring.
@@ -326,7 +327,7 @@ Presenter bars are pill tracks of hairline tone that fill from the left over 700
 Emoji rise from the bottom of a fixed, non-interactive layer over 2.4–3.4s (easing cubic-bezier(.2,.6,.3,1)), drifting gently side to side, fading in and out, capped at 40 at once. On the projector they stay out of the QR column. Under reduced motion they fade in and out in place.
 
 ### Widget Dock
-A guest in someone else's page, rendered in a Shadow DOM: 36px translucent pills (blurred night glass, hairline ring, guest float shadow) in the chosen corner, 16px from the edges. The reader count pill (live dot plus tabular "N readers here") appears only when someone else is present; a reaction toggle opens a tray of 34px circular emoji buttons; reading positions are 6px dots in a 14px right margin that glide over 900ms. It uses the system UI stack at 13px, follows only the OS colour scheme, hides in print, and fails silently.
+A guest in someone else's page, rendered in a Shadow DOM: 36px translucent pills (blurred night glass, hairline ring, guest float shadow) in the chosen corner, 16px from the edges. The reader count pill (live dot plus tabular "N readers here") appears only when someone else is present; a reaction toggle opens a tray of 34px circular emoji buttons; reading positions are 6px dots in a 14px right margin that glide over 900ms. Past 30 readers the extra browsers leave the mesh: the toggle and dots disappear and the count pill reads "30+ readers here". It uses the system UI stack at 13px, follows only the OS colour scheme, hides in print, and fails silently.
 
 ## Do's and Don'ts
 

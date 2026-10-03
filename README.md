@@ -23,7 +23,9 @@ On the presenter screen:
 | `Q` | Fold the QR code away once everyone is in |
 | `T` | Switch light and dark |
 
-Polls take two to four options; bars update live and the screen clears when you close voting. Questions are sorted by votes; you can mark them answered or hide them.
+Polls take two to four options; bars update live and the screen clears when you close voting. Questions are sorted by votes; you can mark them answered or hide them. The download button in the toolbar saves the session as CSV: every poll with its final counts, and the visible questions. The file is built in the presenter's browser.
+
+A phone that reloads keeps its vote: it stores a random voter ID in `localStorage` and sends it along, so a second vote replaces the first instead of adding to it. If a phone loses the presenter for more than 10 seconds, typically after the screen locks on iOS, a **Rejoin** button appears.
 
 ## The widget
 
@@ -51,7 +53,8 @@ How it behaves on your page:
 - Everything renders inside one `<ephemeral-widget>` element with a Shadow DOM: your CSS and its CSS never meet. No globals.
 - Each page gets its own room, derived from `SHA-256(host + pathname)`. The query string and hash are ignored, so `?utm_source=…` doesn't split readers, and relays never see the URL in clear.
 - If the scripts can't load (corporate network, blocker), nothing is shown.
-- It loads its modules from GitHub Pages (`Access-Control-Allow-Origin: *`) and Trystero from jsDelivr. No fonts, no images.
+- Everything it runs comes from GitHub Pages (`Access-Control-Allow-Origin: *`), Trystero included: no third-party CDN, no fonts, no images. Its only other connections are to the Nostr relays and to the other readers.
+- On a busy page it stays light: past 30 readers, the extra browsers leave the mesh and just show "30+ readers here". Every browser sorts the same peer IDs, so they all agree on who steps out without talking about it.
 
 ## How it works
 
@@ -66,9 +69,11 @@ core/       shared by the room and the widget
   emoji.js      grapheme-aware emoji lists
   fog.js        the "wipe the glass" canvas
   tokens.css    design tokens
-room/       the room app (identity, store, validation, presenter, audience)
+room/       the room app (identity, store, validation, export, presenter, audience)
 widget/     ephemeral.js, the embeddable script
 site/       landing page assets
+vendor/     Trystero and qrcode-generator, bundled and pinned (see scripts/vendor.sh)
+scripts/    vendor.sh, and e2e/ for manual browser checks
 tests/      node --test
 ```
 
@@ -81,9 +86,11 @@ All rooms use the Trystero app ID `ephemeral-v1`, with prefixed room names (`roo
 | `hello` | presenter → new peer | `{ pub, payload, sig }`, the payload being `{ peerId, t }` |
 | `state` | presenter → everyone | `{ payload, sig }`, the payload being `{ seq, poll, tally, questions }` |
 | `react` | everyone → everyone | an emoji from the allow-list |
-| `vote` | audience → presenter | `{ pollId, option }` |
-| `ask` | audience → presenter | `{ id, text }`, at most 200 characters |
-| `upvote` | audience → presenter | `{ questionId }` |
+| `vote` | audience → presenter | `{ pollId, option, voter }` |
+| `ask` | audience → presenter | `{ id, text, voter }`, at most 200 characters |
+| `upvote` | audience → presenter | `{ questionId, voter }` |
+
+`voter` is optional. Once a peer has used a voter ID, the presenter refuses any other one from that peer, so switching IDs doesn't buy extra votes.
 
 The widget uses `react` and `pos` (a scroll ratio in [0, 1], sent at most once a second and only after a change of more than 2%).
 
@@ -95,7 +102,7 @@ The presenter's browser generates an ECDSA P-256 key pair. The room ID is the fi
 - `state` is accepted only from that peer, only with a valid signature, and only with a `seq` higher than the last one. A replayed or forged state is dropped.
 - When the presenter reloads, a fresh signed `hello` resets the sequence.
 
-The presenter is the only aggregator: one vote per peer ID, re-broadcast at most every 300 ms.
+The presenter is the only aggregator: one vote per participant (voter ID, or peer ID without one), re-broadcast at most every 300 ms.
 
 Everything a peer sends is untrusted: types and sizes are checked, text is always rendered with `textContent`, reactions must be in the allow-list, and every action is rate limited per peer (reactions 4/s with a burst of 8, positions 1/s, votes, questions and upvotes 1/s with a burst of 3).
 
@@ -108,13 +115,14 @@ These come with the approach. They are not bugs.
 - **IP addresses are visible to peers.** WebRTC exposes each peer's IP address to the others in the room. Only a forced TURN relay (`iceTransportPolicy: 'relay'`) hides them, again with a server.
 - **Public Nostr relays.** They are run by third parties and can be slow, saturated or gone. Trystero uses several at once; you can pin your own with `relayConfig: { urls: [...] }`.
 - **Nothing persists.** When everyone leaves, it is gone. On a quiet site the widget is almost always alone, and stays hidden.
-- **Votes and reactions can be gamed.** Anyone can open the console and send reactions, or reconnect with a new peer ID and vote again. Rate limits soften this; they don't stop it. A vote that matters needs authentication, so a server.
+- **Busy pages.** The widget caps its mesh at 30 readers, and the landing page's demo spreads visitors over 8 panes of at most 12 people each. A room has no cap: it is meant for a class or a meetup.
+- **Votes and reactions can be gamed.** Anyone can open the console and send reactions, or clear their storage, reconnect and vote again. The voter ID only stops accidental double votes, and rate limits slow abuse down; neither stops it. A vote that matters needs authentication, so a server.
 - **Phones in the background.** Mobile browsers, iOS Safari especially, drop connections when the screen locks. The audience screen shows "Reconnecting…" and Trystero renegotiates when the page comes back.
 - **Secure context.** WebRTC and `crypto.subtle` require HTTPS or `localhost`.
 
 ## Privacy
 
-There is no server, no cookie and no analytics. Room state lives in the presenter's browser; the widget stores nothing. But peers exchange IP addresses, which is personal data under the GDPR: the room and the landing page say so, and if you put the widget on a professional site, tell your readers too. This is not legal advice; have it checked if it matters for you.
+There is no server, no cookie and no analytics. Room state lives in the presenter's browser; a phone in a room keeps its own votes and a random voter ID in `localStorage`; the widget stores nothing. But peers exchange IP addresses, which is personal data under the GDPR: the room and the landing page say so, and if you put the widget on a professional site, tell your readers too. This is not legal advice; have it checked if it matters for you.
 
 ## Development
 
@@ -129,19 +137,30 @@ node --test                   # unit tests (Node 22+)
 
 To test the widget from another origin locally, the server hosting `widget/` must send `Access-Control-Allow-Origin: *`, as GitHub Pages does.
 
+Browser checks (two tabs, reactions, reading dots, the widget cap, a full room session with a reload, an attacker and the CSV export) live in `scripts/e2e`. They use the real public relays, so they are not run in CI:
+
+```bash
+cd scripts/e2e && npm install && npx playwright install chromium
+npm test                                   # against http://localhost:8000
+BASE=https://maxgfr.github.io/ephemeral npm test
+npm run og                                 # regenerate site/og.png
+```
+
+Third-party code is bundled into `vendor/` by `scripts/vendor.sh` from pinned npm versions; the build is reproducible, and the site itself never runs npm.
+
 ## Ideas
 
 Not built yet:
 
 - Widget themes (`data-theme="auto|light|dark"`).
-- Exporting room results at the end of a session (CSV or image), generated in the presenter's browser.
+- Exporting room results as an image, next to the CSV.
 - Co-presenters: the presenter signs a delegation for a second public key.
 - Word cloud polls: short free answers aggregated by the presenter.
 - A passive Trystero peer in a relay tab that keeps a room alive without announcing itself.
 
 ## Credits
 
-[Trystero](https://github.com/dmotz/trystero) (MIT) for WebRTC and signaling, [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) (MIT) for the QR code, and [Bricolage Grotesque](https://github.com/ateliertriay/bricolage) (SIL Open Font License, see `core/fonts/OFL.txt`).
+[Trystero](https://github.com/dmotz/trystero) (MIT) for WebRTC and signaling, [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) (MIT) for the QR code (both bundled in `vendor/`, licenses in `vendor/LICENSES.md`), and [Bricolage Grotesque](https://github.com/ateliertriay/bricolage) (SIL Open Font License, see `core/fonts/OFL.txt`).
 
 ## License
 

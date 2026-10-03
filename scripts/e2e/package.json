@@ -1,0 +1,13 @@
+{
+  "name": "ephemeral-e2e",
+  "private": true,
+  "description": "Manual browser checks. They use public Nostr relays, so they are not run in CI.",
+  "type": "module",
+  "scripts": {
+    "test": "node e2e.mjs",
+    "og": "node og.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.63.0"
+  }
+}
