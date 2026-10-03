@@ -3,11 +3,40 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ephemeral mesh test</title>
+<style>
+  #layer { position: fixed; inset: 0; overflow: hidden; pointer-events: none }
+</style>
 <p id="status">Connecting…</p>
 <p>Self: <code id="self"></code></p>
+<p id="bar"></p>
+<div id="layer"></div>
 <script type="module">
   import { openRoom } from './core/mesh.js'
+  import { floatEmoji } from './core/float.js'
+  import { limiter } from './core/ratelimit.js'
+  import { DEFAULT_REACTIONS, isAllowed } from './core/emoji.js'
+
   const mesh = openRoom('ephemeral-test-v1', 'mesh-test-' + (location.hash.slice(1) || 'default'))
+  const layer = document.getElementById('layer')
+  const react = mesh.action('react')
+  const sendOk = limiter(4, 8)
+  const recvOk = limiter(4, 8)
+  mesh.onLeave(id => recvOk.forget(id))
+
+  for (const e of DEFAULT_REACTIONS) {
+    const b = document.createElement('button')
+    b.textContent = e
+    b.onclick = () => {
+      if (!sendOk('self')) return
+      floatEmoji(layer, e)
+      react.send(e)
+    }
+    document.getElementById('bar').append(b)
+  }
+  react.on((e, peerId) => {
+    if (isAllowed(DEFAULT_REACTIONS, e) && recvOk(peerId)) floatEmoji(layer, e)
+  })
+
   document.getElementById('self').textContent = mesh.selfId
   const render = () => {
     const n = mesh.peers.size
