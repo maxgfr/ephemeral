@@ -30,7 +30,9 @@ function frostTile(el) {
   return tile
 }
 
-export function createFog(canvas, { returnMs = 5200, brush = 64 } = {}) {
+export function createFog(canvas, { returnMs, brush = 64 } = {}) {
+  // Default return time comes from the --fog-return token (ms).
+  returnMs ??= parseFloat(getComputedStyle(canvas).getPropertyValue('--fog-return')) || 5200
   const ctx = canvas.getContext('2d')
   const mask = document.createElement('canvas')
   const mctx = mask.getContext('2d')
