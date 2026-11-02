@@ -2,7 +2,13 @@
 // the room ID is the first 20 hex chars of SHA-256(public key). The audience
 // checks that the announced key hashes to the room ID in the URL, then checks
 // every signature. Nobody without the private key can speak for the room.
+//
+// The private key is non-extractable and lives in IndexedDB (room/db.js).
+// Earlier versions kept it as a JWK, in clear, in localStorage, where any
+// script on the shared maxgfr.github.io origin could read it: loadHost moves
+// such a key over and erases the clear copy once the new one is stored.
 import { hex, fromHex } from '../core/ids.js'
+import { idbStore } from './db.js'
 
 const ALGO = { name: 'ECDSA', namedCurve: 'P-256' }
 const SIGN = { name: 'ECDSA', hash: 'SHA-256' }
@@ -11,24 +17,38 @@ const keyName = roomId => `ephemeral-host-${roomId}`
 
 const roomIdOf = async pubRaw => hex(await crypto.subtle.digest('SHA-256', pubRaw)).slice(0, 20)
 
-export async function createHost(storage = localStorage) {
-  const kp = await crypto.subtle.generateKey(ALGO, true, ['sign', 'verify'])
+// Rejects when the key cannot be stored: without it a reload loses the room.
+export async function createHost(keys = idbStore('keys')) {
+  const kp = await crypto.subtle.generateKey(ALGO, false, ['sign', 'verify'])
   const pubRaw = await crypto.subtle.exportKey('raw', kp.publicKey)
   const roomId = await roomIdOf(pubRaw)
-  const privJwk = await crypto.subtle.exportKey('jwk', kp.privateKey)
-  storage.setItem(keyName(roomId), JSON.stringify({ privJwk, pub: hex(pubRaw) }))
+  await keys.set(keyName(roomId), { privateKey: kp.privateKey, pub: hex(pubRaw) })
   return roomId
 }
 
-export async function loadHost(roomId, storage = localStorage) {
-  let saved
+// A key from localStorage, imported as non-extractable. The clear copy is
+// erased only once the new one is stored: losing both would lose the room.
+async function migrateHost(roomId, keys, legacy) {
+  let old
   try {
-    saved = JSON.parse(storage.getItem(keyName(roomId)))
+    old = JSON.parse(legacy?.getItem(keyName(roomId)) ?? 'null')
   } catch {
     return null
   }
-  if (!saved?.privJwk || !saved.pub) return null
-  const key = await crypto.subtle.importKey('jwk', saved.privJwk, ALGO, false, ['sign'])
+  if (!old?.privJwk || typeof old.pub !== 'string') return null
+  const privateKey = await crypto.subtle.importKey('jwk', old.privJwk, ALGO, false, ['sign'])
+  const saved = { privateKey, pub: old.pub }
+  try {
+    await keys.set(keyName(roomId), saved)
+    legacy.removeItem(keyName(roomId))
+  } catch {}
+  return saved
+}
+
+export async function loadHost(roomId, keys = idbStore('keys'), legacy = globalThis.localStorage) {
+  const saved = (await keys.get(keyName(roomId)).catch(() => undefined)) ?? (await migrateHost(roomId, keys, legacy))
+  if (!(saved?.privateKey instanceof CryptoKey) || typeof saved.pub !== 'string') return null
+  const key = saved.privateKey
 
   // Sign the JSON string itself and ship it as-is: no key-order ambiguity
   // when the other side verifies.
