@@ -46,7 +46,15 @@ async function route() {
   }
 
   if (hash === 'new') {
-    const roomId = await createHost()
+    let roomId
+    try {
+      roomId = await createHost()
+    } catch {
+      history.replaceState(null, '', location.pathname)
+      return screen('This browser could not keep the room’s key.', [
+        'Storage for this site is full or blocked (a private window can do that), and without the key a reload would lose your room. Free some space or use a normal window, then try again.',
+      ], [createButton('Try again')])
+    }
     history.replaceState(null, '', `#${roomId}`)
     return route()
   }
@@ -67,7 +75,7 @@ async function route() {
   const host = await loadHost(hash).catch(() => null)
   if (host) {
     const { startHost } = await import('./host.js')
-    startHost(app, hash, host)
+    await startHost(app, hash, host)
   } else {
     const { startAudience } = await import('./audience.js')
     startAudience(app, hash)

@@ -13,18 +13,13 @@ import { createStore } from './store.js'
 import { toCsv } from './export.js'
 import { validVote, validAsk, validUpvote, validPollDraft, MAX_TEXT, MAX_OPTION } from './validate.js'
 import { verifyHello } from './identity.js'
-import { roomName, REACTIONS, BROADCAST_MS, LIMITS, stateKey, joinUrl } from './protocol.js'
+import { roomName, REACTIONS, BROADCAST_MS, LIMITS, joinUrl } from './protocol.js'
+import { loadRoom, saveRoom } from './saved.js'
 
-function loadSaved(roomId) {
-  try {
-    return JSON.parse(localStorage.getItem(stateKey(roomId))) ?? {}
-  } catch {
-    return {}
-  }
-}
+const UNSAVED = 'This browser is not saving the room (storage full or blocked): a reload will lose the polls and questions.'
 
-export function startHost(app, roomId, host) {
-  const store = createStore(loadSaved(roomId))
+export async function startHost(app, roomId, host) {
+  const store = createStore(await loadRoom(roomId))
   const mesh = openRoom(roomName(roomId))
   const url = joinUrl()
   const shortUrl = url.replace(/^https?:\/\//, '')
@@ -104,9 +99,21 @@ export function startHost(app, roomId, host) {
     dirty = false
     lastSigned = await host.sign(store.snapshot())
     stateAction.send(lastSigned)
-    try {
-      localStorage.setItem(stateKey(roomId), JSON.stringify(store.toJSON()))
-    } catch {}
+    showSaved(await saveRoom(roomId, store.toJSON()))
+  }
+
+  // Say so when the room stops being saved, and stop saying so once it is again.
+  let unsaved = false
+  function showSaved(saved) {
+    if (saved !== unsaved) return
+    unsaved = !saved
+    if (unsaved) {
+      statusLine.textContent = UNSAVED
+      statusLine.dataset.tone = 'warn'
+    } else if (statusLine.textContent === UNSAVED) {
+      delete statusLine.dataset.tone
+      renderCount()
+    }
   }
 
   // At most one state every BROADCAST_MS, so thirty people voting at once

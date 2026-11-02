@@ -13,7 +13,7 @@ For talks, classes and meetings.
 2. Put that screen on the projector. It shows a QR code, the link and the number of people in the room.
 3. The audience scans the code and lands on the same URL. Their phones show a reaction bar, the current poll and the questions.
 
-Everyone uses the same URL. The browser that holds the room's private key is the presenter; everyone else is audience. Reload the presenter tab and you get your role back, along with the polls and questions, which are saved in that browser's `localStorage`.
+Everyone uses the same URL. The browser that holds the room's private key is the presenter; everyone else is audience. Reload the presenter tab and you get your role back, along with the polls and questions, which are saved in that browser's IndexedDB. The private key is stored there as a non-extractable `CryptoKey`: scripts on the page can sign with it, but none can read it out. If the browser refuses to store them (full or blocked storage), the presenter screen says a reload will lose the room.
 
 On the presenter screen:
 
@@ -69,7 +69,7 @@ core/       shared by the room and the widget
   emoji.js      grapheme-aware emoji lists
   fog.js        the "wipe the glass" canvas
   tokens.css    design tokens
-room/       the room app (identity, store, validation, export, presenter, audience)
+room/       the room app (identity, storage, store, validation, export, presenter, audience)
 widget/     ephemeral.js, the embeddable script
 site/       landing page assets
 vendor/     Trystero and qrcode-generator, bundled and pinned (see scripts/vendor.sh)
